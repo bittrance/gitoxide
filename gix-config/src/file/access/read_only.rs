@@ -12,7 +12,7 @@ use crate::{
     },
     lookup,
     parse::Event,
-    File,
+    File, Key,
 };
 
 /// Read-only low-level access methods, as it requires generics for converting into
@@ -44,28 +44,18 @@ impl<'event> File<'event> {
     /// "#;
     /// let git_config = gix_config::File::try_from(config)?;
     /// // You can either use the turbofish to determine the type...
-    /// let a_value = git_config.value::<Integer>("core", None, "a")?;
+    /// let a_value = git_config.value::<Integer>("core.a")?;
     /// // ... or explicitly declare the type to avoid the turbofish
-    /// let c_value: Boolean = git_config.value("core", None, "c")?;
+    /// let c_value: Boolean = git_config.value("core.c")?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn value<'a, T: TryFrom<Cow<'a, BStr>>>(
-        &'a self,
-        section_name: &str,
-        subsection_name: Option<&BStr>,
-        key: &str,
-    ) -> Result<T, lookup::Error<T::Error>> {
-        T::try_from(self.raw_value(section_name, subsection_name, key)?).map_err(lookup::Error::FailedConversion)
+    pub fn value<'a, T: TryFrom<Cow<'a, BStr>>>(&'a self, key: impl Key) -> Result<T, lookup::Error<T::Error>> {
+        T::try_from(self.raw_value(key)?).map_err(lookup::Error::FailedConversion)
     }
 
     /// Like [`value()`][File::value()], but returning an `None` if the value wasn't found at `section[.subsection].key`
-    pub fn try_value<'a, T: TryFrom<Cow<'a, BStr>>>(
-        &'a self,
-        section_name: &str,
-        subsection_name: Option<&BStr>,
-        key: &str,
-    ) -> Option<Result<T, T::Error>> {
-        self.raw_value(section_name, subsection_name, key).ok().map(T::try_from)
+    pub fn try_value<'a, T: TryFrom<Cow<'a, BStr>>>(&'a self, key: impl Key) -> Option<Result<T, T::Error>> {
+        self.raw_value(key).ok().map(T::try_from)
     }
 
     /// Returns all interpreted values given a section, an optional subsection
@@ -98,7 +88,7 @@ impl<'event> File<'event> {
     /// "#;
     /// let git_config = gix_config::File::try_from(config).unwrap();
     /// // You can either use the turbofish to determine the type...
-    /// let a_value = git_config.values::<Boolean>("core", None, "a")?;
+    /// let a_value = git_config.values::<Boolean>("core.a")?;
     /// assert_eq!(
     ///     a_value,
     ///     vec![
@@ -108,20 +98,15 @@ impl<'event> File<'event> {
     ///     ]
     /// );
     /// // ... or explicitly declare the type to avoid the turbofish
-    /// let c_value: Vec<Boolean> = git_config.values("core", None, "c").unwrap();
+    /// let c_value: Vec<Boolean> = git_config.values("core.c").unwrap();
     /// assert_eq!(c_value, vec![Boolean(false)]);
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     ///
     /// [`value`]: crate::value
     /// [`TryFrom`]: std::convert::TryFrom
-    pub fn values<'a, T: TryFrom<Cow<'a, BStr>>>(
-        &'a self,
-        section_name: &str,
-        subsection_name: Option<&BStr>,
-        key: &str,
-    ) -> Result<Vec<T>, lookup::Error<T::Error>> {
-        self.raw_values(section_name, subsection_name, key)?
+    pub fn values<'a, T: TryFrom<Cow<'a, BStr>>>(&'a self, key: impl Key) -> Result<Vec<T>, lookup::Error<T::Error>> {
+        self.raw_values(key)?
             .into_iter()
             .map(T::try_from)
             .collect::<Result<Vec<_>, _>>()

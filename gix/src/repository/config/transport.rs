@@ -193,7 +193,10 @@ impl crate::Repository {
                         remote_name
                             .and_then(|name| {
                                 config
-                                    .string_filter("remote", Some(name), Remote::PROXY.name, &mut trusted_only)
+                                    .string_filter(
+                                        &format!("remote.{}.{}", name, Remote::PROXY.name),
+                                        &mut trusted_only,
+                                    )
                                     .map(|v| (v, Cow::Owned(format!("remote.{name}.proxy").into()), &Remote::PROXY))
                             })
                             .or_else(|| {
@@ -251,7 +254,7 @@ impl crate::Repository {
                                 remote_name
                                     .and_then(|name| {
                                         config
-                                            .string_filter("remote", Some(name), "proxyAuthMethod", &mut trusted_only)
+                                            .string_filter(&format!("remote.{name}.proxyAuthMethod"), &mut trusted_only)
                                             .map(|v| {
                                                 (
                                                     v,
@@ -330,12 +333,7 @@ impl crate::Repository {
 
                     {
                         opts.verbose = config
-                            .boolean_filter(
-                                "gitoxide",
-                                Some("http".into()),
-                                gitoxide::Http::VERBOSE.name,
-                                &mut trusted_only,
-                            )
+                            .boolean_filter(gitoxide::Http::VERBOSE, &mut trusted_only)
                             .and_then(Result::ok)
                             .unwrap_or_default();
                     }

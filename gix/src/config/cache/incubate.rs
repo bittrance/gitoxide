@@ -45,7 +45,7 @@ impl StageOne {
             .then_some(Ok(gix_hash::Kind::Sha1))
             .or_else(|| {
                 config
-                    .string("extensions", None, "objectFormat")
+                    .string(Extensions::OBJECT_FORMAT)
                     .map(|format| Extensions::OBJECT_FORMAT.try_into_object_format(format))
             })
             .transpose()?

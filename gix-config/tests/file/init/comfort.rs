@@ -40,33 +40,33 @@ fn from_git_dir() -> crate::Result {
 
     let config = gix_config::File::from_git_dir(git_dir)?;
     assert_eq!(
-        config.string("a", None, "local").expect("present").as_ref(),
+        config.string("a.local").expect("present").as_ref(),
         "value",
         "a value from the local repo configuration"
     );
     assert_eq!(config.string_by_key("a.local").expect("present").as_ref(), "value",);
     assert_eq!(
-        config.string("a", None, "local-include").expect("present").as_ref(),
+        config.string("a.local-include").expect("present").as_ref(),
         "from-a.config",
         "an override from a local repo include"
     );
     assert_eq!(
-        config.string("a", None, "system").expect("present").as_ref(),
+        config.string("a.system").expect("present").as_ref(),
         "from-system.config",
         "system configuration can be overridden with GIT_CONFIG_SYSTEM"
     );
     assert_eq!(
-        config.string("a", None, "system-override").expect("present").as_ref(),
+        config.string("a.system-override").expect("present").as_ref(),
         "from-b.config",
         "globals resolve their includes"
     );
     assert_eq!(
-        config.string("a", None, "user").expect("present").as_ref(),
+        config.string("a.user").expect("present").as_ref(),
         "from-user.config",
         "per-user configuration"
     );
     assert_eq!(
-        config.string("env", None, "override").expect("present").as_ref(),
+        config.string("env.override").expect("present").as_ref(),
         "from-c.config",
         "environment includes are resolved"
     );
@@ -74,7 +74,7 @@ fn from_git_dir() -> crate::Result {
     // on CI this file actually exists in xdg home and our values aren't present
     if !(cfg!(unix) && gix_testtools::is_ci::cached()) {
         assert_eq!(
-            config.string("a", None, "git").expect("present").as_ref(),
+            config.string("a.git").expect("present").as_ref(),
             "git-application",
             "we load the XDG directories, based on the HOME fallback"
         );
@@ -92,16 +92,13 @@ fn from_git_dir_with_worktree_extension() -> crate::Result {
 
     assert_eq!(
         config
-            .string("extensions", None, "worktreeConfig")
+            .string("extensions.worktreeConfig")
             .expect("extension present")
             .as_ref(),
         "true"
     );
     assert_eq!(
-        config
-            .string("worktree", None, "override")
-            .expect("section present")
-            .as_ref(),
+        config.string("worktree.override").expect("section present").as_ref(),
         "set in the main worktree"
     );
 

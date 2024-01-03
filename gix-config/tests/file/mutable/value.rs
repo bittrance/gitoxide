@@ -5,7 +5,7 @@ mod get {
 
     fn config_get(input: &str) -> BString {
         let mut file: gix_config::File = input.parse().unwrap();
-        file.raw_value_mut("a", None, "k").unwrap().get().unwrap().into_owned()
+        file.raw_value_mut("a.k").unwrap().get().unwrap().into_owned()
     }
 
     #[test]
@@ -32,7 +32,7 @@ mod get {
     fn value_is_correct() -> crate::Result {
         let mut config = init_config();
 
-        let value = config.raw_value_mut("core", None, "a")?;
+        let value = config.raw_value_mut("core.a")?;
         assert_eq!(&*value.get()?, "b100");
         Ok(())
     }
@@ -53,7 +53,7 @@ mod set_string {
             "[a] k",
         ] {
             let mut file: gix_config::File = input.replace("$nl", &nl).parse().unwrap();
-            let mut v = file.raw_value_mut("a", None, "k").unwrap();
+            let mut v = file.raw_value_mut("a.k").unwrap();
             v.set_string(expected);
 
             assert_eq!(v.get().unwrap().as_ref(), expected);
@@ -64,7 +64,7 @@ mod set_string {
                 Err(err) => panic!("{file_string:?} failed with: {err}"),
             };
             assert_eq!(
-                file.raw_value("a", None, "k").expect("present").as_ref(),
+                file.raw_value("a.k").expect("present").as_ref(),
                 expected,
                 "{file_string:?}"
             );
@@ -124,7 +124,7 @@ mod set_string {
     fn simple_value_and_empty_string() -> crate::Result {
         let mut config = init_config();
 
-        let mut value = config.raw_value_mut("core", None, "a")?;
+        let mut value = config.raw_value_mut("core.a")?;
         value.set_string("hello world");
         assert_eq!(
             config.to_string(),
@@ -136,7 +136,7 @@ mod set_string {
 "#,
         );
 
-        let mut value = config.raw_value_mut("core", None, "e")?;
+        let mut value = config.raw_value_mut("core.e")?;
         value.set_string(String::new());
         assert_eq!(
             config.to_string(),
@@ -158,14 +158,14 @@ mod delete {
     fn single_line_value() -> crate::Result {
         let mut config = init_config();
 
-        let mut value = config.raw_value_mut("core", None, "a")?;
+        let mut value = config.raw_value_mut("core.a")?;
         value.delete();
         assert_eq!(
             config.to_string(),
             "[core]\n            \n        [core]\n            c=d\n            e=f\n",
         );
 
-        let mut value = config.raw_value_mut("core", None, "c")?;
+        let mut value = config.raw_value_mut("core.c")?;
         value.delete();
         assert_eq!(
             config.to_string(),
@@ -178,7 +178,7 @@ mod delete {
     fn get_value_after_deleted() -> crate::Result {
         let mut config = init_config();
 
-        let mut value = config.raw_value_mut("core", None, "a")?;
+        let mut value = config.raw_value_mut("core.a")?;
         value.delete();
         assert!(value.get().is_err());
         Ok(())
@@ -188,7 +188,7 @@ mod delete {
     fn set_string_after_deleted() -> crate::Result {
         let mut config = init_config();
 
-        let mut value = config.raw_value_mut("core", None, "a")?;
+        let mut value = config.raw_value_mut("core.a")?;
         value.delete();
         value.set_string("hello world");
         assert_eq!(
@@ -207,7 +207,7 @@ mod delete {
     fn idempotency() -> crate::Result {
         let mut config = init_config();
 
-        let mut value = config.raw_value_mut("core", None, "a")?;
+        let mut value = config.raw_value_mut("core.a")?;
         for _ in 0..3 {
             value.delete();
         }
@@ -228,7 +228,7 @@ b
             c=d
             e=f"#
             .parse()?;
-        let mut value = config.raw_value_mut("core", None, "a")?;
+        let mut value = config.raw_value_mut("core.a")?;
         assert_eq!(&*value.get()?, "b100cb");
         value.delete();
         assert_eq!(
