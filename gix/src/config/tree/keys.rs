@@ -146,16 +146,16 @@ impl<T: Validate> Key for Any<T> {
     }
 }
 
-impl<T: Validate> gix_config::Key for Any<T> {
-    fn name(&self) -> &str {
+impl<'a, T: Validate> gix_config::Key<'a> for Any<T> {
+    fn name(&self) -> &'a str {
         self.name
     }
 
-    fn section_name(&self) -> &str {
+    fn section_name(&self) -> &'a str {
         self.section.parent().map_or_else(|| self.section.name(), Section::name)
     }
 
-    fn subsection_name(&self) -> Option<&BStr> {
+    fn subsection_name(&self) -> Option<&'a BStr> {
         if self.section.parent().is_some() {
             Some(self.section.name().into())
         } else {
@@ -164,16 +164,16 @@ impl<T: Validate> gix_config::Key for Any<T> {
     }
 }
 
-impl<T: Validate> gix_config::Key for &Any<T> {
-    fn name(&self) -> &str {
+impl<'a, T: Validate> gix_config::Key<'a> for &Any<T> {
+    fn name(&self) -> &'a str {
         self.name
     }
 
-    fn section_name(&self) -> &str {
+    fn section_name(&self) -> &'a str {
         self.section.parent().map_or_else(|| self.section.name(), Section::name)
     }
 
-    fn subsection_name(&self) -> Option<&BStr> {
+    fn subsection_name(&self) -> Option<&'a BStr> {
         if self.section.parent().is_some() {
             Some(self.section.name().into())
         } else {

@@ -49,12 +49,12 @@ impl<'event> File<'event> {
     /// let c_value: Boolean = git_config.value("core.c")?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn value<'a, T: TryFrom<Cow<'a, BStr>>>(&'a self, key: impl Key) -> Result<T, lookup::Error<T::Error>> {
+    pub fn value<'a, T: TryFrom<Cow<'a, BStr>>>(&'a self, key: impl Key<'a>) -> Result<T, lookup::Error<T::Error>> {
         T::try_from(self.raw_value(key)?).map_err(lookup::Error::FailedConversion)
     }
 
     /// Like [`value()`][File::value()], but returning an `None` if the value wasn't found at `section[.subsection].key`
-    pub fn try_value<'a, T: TryFrom<Cow<'a, BStr>>>(&'a self, key: impl Key) -> Option<Result<T, T::Error>> {
+    pub fn try_value<'a, T: TryFrom<Cow<'a, BStr>>>(&'a self, key: impl Key<'a>) -> Option<Result<T, T::Error>> {
         self.raw_value(key).ok().map(T::try_from)
     }
 
@@ -105,7 +105,10 @@ impl<'event> File<'event> {
     ///
     /// [`value`]: crate::value
     /// [`TryFrom`]: std::convert::TryFrom
-    pub fn values<'a, T: TryFrom<Cow<'a, BStr>>>(&'a self, key: impl Key) -> Result<Vec<T>, lookup::Error<T::Error>> {
+    pub fn values<'a, T: TryFrom<Cow<'a, BStr>>>(
+        &'a self,
+        key: impl Key<'a>,
+    ) -> Result<Vec<T>, lookup::Error<T::Error>> {
         self.raw_values(key)?
             .into_iter()
             .map(T::try_from)

@@ -210,9 +210,9 @@ impl Cache {
 
     /// A helper to obtain a file from trusted configuration at `section_name`, `subsection_name`, and `key`, which is interpolated
     /// if present.
-    pub(crate) fn trusted_file_path(
+    pub(crate) fn trusted_file_path<'a>(
         &self,
-        key: impl gix_config::Key,
+        key: impl gix_config::Key<'a>,
     ) -> Option<Result<Cow<'_, std::path::Path>, gix_config::path::interpolate::Error>> {
         let path = self
             .resolved

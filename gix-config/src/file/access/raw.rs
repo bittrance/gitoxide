@@ -19,7 +19,7 @@ impl<'event> File<'event> {
     ///
     /// Consider [`Self::raw_values()`] if you want to get all values of
     /// a multivar instead.
-    pub fn raw_value(&self, key: impl Key) -> Result<Cow<'_, BStr>, lookup::existing::Error> {
+    pub fn raw_value<'a>(&self, key: impl Key<'a>) -> Result<Cow<'_, BStr>, lookup::existing::Error> {
         self.raw_value_filter(key, &mut |_| true)
     }
 
@@ -28,17 +28,17 @@ impl<'event> File<'event> {
     ///
     /// Consider [`Self::raw_values()`] if you want to get all values of
     /// a multivar instead.
-    pub fn raw_value_filter(
+    pub fn raw_value_filter<'a>(
         &self,
-        key: impl Key,
+        key: impl Key<'a>,
         filter: &mut MetadataFilter,
     ) -> Result<Cow<'_, BStr>, lookup::existing::Error> {
         self.raw_value_filter_inner(key, filter)
     }
 
-    fn raw_value_filter_inner(
+    fn raw_value_filter_inner<'a>(
         &self,
-        key: impl Key,
+        key: impl Key<'a>,
         filter: &mut MetadataFilter,
     ) -> Result<Cow<'_, BStr>, lookup::existing::Error> {
         let section_ids = self.section_ids_by_name_and_subname(key.section_name(), key.subsection_name())?;
@@ -62,7 +62,7 @@ impl<'event> File<'event> {
     /// references to all values of a multivar instead.
     pub fn raw_value_mut<'lookup>(
         &mut self,
-        key: impl Key + 'lookup,
+        key: impl Key<'lookup>,
     ) -> Result<ValueMut<'_, 'lookup, 'event>, lookup::existing::Error> {
         self.raw_value_mut_filter(key, &mut |_| true)
     }
@@ -74,7 +74,7 @@ impl<'event> File<'event> {
     /// references to all values of a multivar instead.
     pub fn raw_value_mut_filter<'lookup>(
         &mut self,
-        key: impl Key + 'lookup,
+        key: impl Key<'lookup>,
         filter: &mut MetadataFilter,
     ) -> Result<ValueMut<'_, 'lookup, 'event>, lookup::existing::Error> {
         self.raw_value_mut_filter_inner(key, filter)
@@ -82,13 +82,13 @@ impl<'event> File<'event> {
 
     fn raw_value_mut_filter_inner<'lookup>(
         &mut self,
-        key: impl Key + 'lookup,
+        key: impl Key<'lookup>,
         filter: &mut MetadataFilter,
     ) -> Result<ValueMut<'_, 'lookup, 'event>, lookup::existing::Error> {
         let mut section_ids = self
             .section_ids_by_name_and_subname(key.section_name(), key.subsection_name())?
             .rev();
-        let key = section::Key(Cow::Owned(key.name().into())); // TODO Borrow, plz
+        let key = section::Key(Cow::Borrowed(key.name().into())); // TODO Borrow, plz
 
         while let Some(section_id) = section_ids.next() {
             let mut index = 0;
@@ -174,7 +174,7 @@ impl<'event> File<'event> {
     ///
     /// Consider [`Self::raw_value`] if you want to get the resolved single
     /// value for a given key, if your key does not support multi-valued values.
-    pub fn raw_values(&self, key: impl Key) -> Result<Vec<Cow<'_, BStr>>, lookup::existing::Error> {
+    pub fn raw_values<'a>(&self, key: impl Key<'a>) -> Result<Vec<Cow<'_, BStr>>, lookup::existing::Error> {
         self.raw_values_filter(key, &mut |_| true)
     }
 
@@ -183,17 +183,17 @@ impl<'event> File<'event> {
     ///
     /// The ordering means that the last of the returned values is the one that would be the
     /// value used in the single-value case.
-    pub fn raw_values_filter(
+    pub fn raw_values_filter<'a>(
         &self,
-        key: impl Key,
+        key: impl Key<'a>,
         filter: &mut MetadataFilter,
     ) -> Result<Vec<Cow<'_, BStr>>, lookup::existing::Error> {
         self.raw_values_filter_inner(key, filter)
     }
 
-    fn raw_values_filter_inner(
+    fn raw_values_filter_inner<'a>(
         &self,
-        key: impl Key,
+        key: impl Key<'a>,
         filter: &mut MetadataFilter,
     ) -> Result<Vec<Cow<'_, BStr>>, lookup::existing::Error> {
         let mut values = Vec::new();
@@ -265,7 +265,7 @@ impl<'event> File<'event> {
     /// traversal of the config.
     pub fn raw_values_mut<'lookup>(
         &mut self,
-        key: impl Key + 'lookup,
+        key: impl Key<'lookup>,
     ) -> Result<MultiValueMut<'_, 'lookup, 'event>, lookup::existing::Error> {
         self.raw_values_mut_filter(key, &mut |_| true)
     }
@@ -274,7 +274,7 @@ impl<'event> File<'event> {
     /// an optional subsection and key, if their sections pass `filter`.
     pub fn raw_values_mut_filter<'lookup>(
         &mut self,
-        key: impl Key + 'lookup,
+        key: impl Key<'lookup>,
         filter: &mut MetadataFilter,
     ) -> Result<MultiValueMut<'_, 'lookup, 'event>, lookup::existing::Error> {
         self.raw_values_mut_filter_inner(key, filter)
@@ -282,11 +282,11 @@ impl<'event> File<'event> {
 
     fn raw_values_mut_filter_inner<'lookup>(
         &mut self,
-        key: impl Key,
+        key: impl Key<'lookup>,
         filter: &mut MetadataFilter,
     ) -> Result<MultiValueMut<'_, 'lookup, 'event>, lookup::existing::Error> {
         let section_ids = self.section_ids_by_name_and_subname(key.section_name(), key.subsection_name())?;
-        let key = section::Key(Cow::Owned(key.name().into())); // TODO Borrow, plz
+        let key = section::Key(Cow::Borrowed(key.name().into()));
 
         let mut offsets = HashMap::new();
         let mut entries = Vec::new();
@@ -373,9 +373,9 @@ impl<'event> File<'event> {
     /// );
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
-    pub fn set_existing_raw_value<'b>(
+    pub fn set_existing_raw_value<'a, 'b>(
         &mut self,
-        key: impl Key,
+        key: impl Key<'a>,
         new_value: impl Into<&'b BStr>,
     ) -> Result<(), lookup::existing::Error> {
         self.raw_value_mut(key).map(|mut entry| entry.set(new_value))
@@ -410,7 +410,7 @@ impl<'event> File<'event> {
     /// ```
     pub fn set_raw_value<'b, E>(
         &mut self,
-        key: impl Key,
+        key: impl Key<'b>,
         new_value: impl Into<&'b BStr>,
     ) -> Result<Option<Cow<'event, BStr>>, crate::file::set_raw_value::Error>
     where
@@ -423,7 +423,7 @@ impl<'event> File<'event> {
     /// `filter`, creating a new section otherwise.
     pub fn set_raw_value_filter<'b>(
         &mut self,
-        key: impl Key,
+        key: impl Key<'b>,
         new_value: impl Into<&'b BStr>,
         filter: &mut MetadataFilter,
     ) -> Result<Option<Cow<'event, BStr>>, crate::file::set_raw_value::Error> {
@@ -516,14 +516,14 @@ impl<'event> File<'event> {
     /// assert!(!git_config.raw_values("core.a")?.contains(&Cow::<BStr>::Borrowed("discarded".into())));
     /// # Ok::<(), gix_config::lookup::existing::Error>(())
     /// ```
-    pub fn set_existing_raw_multi_value<'a, Iter, Item>(
+    pub fn set_existing_raw_multi_value<'a, 'b, Iter, Item>(
         &mut self,
-        key: impl Key,
+        key: impl Key<'a>,
         new_values: Iter,
     ) -> Result<(), lookup::existing::Error>
     where
         Iter: IntoIterator<Item = Item>,
-        Item: Into<&'a BStr>,
+        Item: Into<&'b BStr>,
     {
         self.raw_values_mut(key).map(|mut v| v.set_values(new_values))
     }
