@@ -78,7 +78,7 @@ impl File {
         defaults: gix_pathspec::Defaults,
     ) -> Result<IsActivePlatform, crate::is_active_platform::Error> {
         let search = config
-            .strings_by_key("submodule.active")
+            .strings("submodule.active")
             .map(|patterns| -> Result<_, crate::is_active_platform::Error> {
                 let patterns = patterns
                     .into_iter()

@@ -37,7 +37,7 @@ impl StageOne {
         // the repo doesn't have a configuration file.
         let is_bare = util::config_bool(&config, &Core::BARE, "core.bare", true, lenient)?;
         let repo_format_version = config
-            .integer_by_key("core.repositoryFormatVersion")
+            .integer("core.repositoryFormatVersion")
             .map(|version| Core::REPOSITORY_FORMAT_VERSION.try_into_usize(version))
             .transpose()?
             .unwrap_or_default();

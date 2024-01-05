@@ -121,7 +121,7 @@ impl Cache {
     pub(crate) fn big_file_threshold(&self) -> Result<u64, config::unsigned_integer::Error> {
         Ok(self
             .resolved
-            .integer_by_key("core.bigFileThreshold")
+            .integer("core.bigFileThreshold")
             .map(|number| Core::BIG_FILE_THRESHOLD.try_into_u64(number))
             .transpose()
             .with_leniency(self.lenient_config)?
@@ -136,7 +136,7 @@ impl Cache {
             .user_agent
             .get_or_init(|| {
                 self.resolved
-                    .string_by_key(Gitoxide::USER_AGENT.logical_name().as_str())
+                    .string(Gitoxide::USER_AGENT.logical_name().as_str())
                     .map_or_else(|| crate::env::agent().into(), |s| s.to_string())
             })
             .to_owned();
@@ -172,7 +172,7 @@ impl Cache {
     pub(crate) fn may_use_commit_graph(&self) -> Result<bool, config::boolean::Error> {
         const DEFAULT: bool = true;
         self.resolved
-            .boolean_by_key("core.commitGraph")
+            .boolean("core.commitGraph")
             .map_or(Ok(DEFAULT), |res| {
                 Core::COMMIT_GRAPH
                     .enrich_error(res)
@@ -267,7 +267,7 @@ impl Cache {
         let git_dir = repo.git_dir();
         let thread_limit = self.apply_leniency(
             self.resolved
-                .integer_filter_by_key("checkout.workers", &mut self.filter_config_section.clone())
+                .integer_filter("checkout.workers", &mut self.filter_config_section.clone())
                 .map(|value| crate::config::tree::Checkout::WORKERS.try_from_workers(value)),
         )?;
         let capabilities = self.fs_capabilities()?;
@@ -445,6 +445,6 @@ fn boolean(
         "BUG: key name and hardcoded name must match"
     );
     Ok(me
-        .apply_leniency(me.resolved.boolean_by_key(full_key).map(|v| key.enrich_error(v)))?
+        .apply_leniency(me.resolved.boolean(full_key).map(|v| key.enrich_error(v)))?
         .unwrap_or(default))
 }

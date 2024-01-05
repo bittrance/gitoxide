@@ -99,7 +99,7 @@ fn set_value_in_subsection() {
         //       Maybe a sub-type?
         assert_eq!(
             config
-                .string_by_key(&*gitoxide::Credentials::TERMINAL_PROMPT.logical_name())
+                .string(&*gitoxide::Credentials::TERMINAL_PROMPT.logical_name())
                 .expect("just set")
                 .as_ref(),
             "yes"

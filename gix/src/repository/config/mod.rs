@@ -66,7 +66,7 @@ impl crate::Repository {
             disallow_shell: fallback_active,
             command: ssh_command,
             kind: config
-                .string_filter_by_key("ssh.variant", &mut trusted)
+                .string_filter("ssh.variant", &mut trusted)
                 .and_then(|variant| Ssh::VARIANT.try_into_variant(variant).transpose())
                 .transpose()
                 .with_leniency(self.options.lenient_config)?,

@@ -334,7 +334,7 @@ fn replacement_objects_refs_prefix(
         let key = "gitoxide.objects.replaceRefBase";
         debug_assert_eq!(gitoxide::Objects::REPLACE_REF_BASE.logical_name(), key);
         config
-            .string_filter_by_key(key, &mut filter_config_section)
+            .string_filter(key, &mut filter_config_section)
             .unwrap_or_else(|| Cow::Borrowed("refs/replace/".into()))
     })
     .into_owned();

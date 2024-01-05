@@ -132,7 +132,7 @@ impl Personas {
                 "BUG: drift of expected name and actual name of the key (we hardcode it to save an allocation)"
             );
             config
-                .string_by_key(key)
+                .string(key)
                 .map(|time| date.try_into_time(time, now.into()))
         };
 
@@ -151,7 +151,7 @@ impl Personas {
 
         user_email = user_email.or_else(|| {
             config
-                .string_by_key(gitoxide::User::EMAIL_FALLBACK.logical_name().as_str())
+                .string(gitoxide::User::EMAIL_FALLBACK.logical_name().as_str())
                 .map(std::borrow::Cow::into_owned)
         });
         Personas {
